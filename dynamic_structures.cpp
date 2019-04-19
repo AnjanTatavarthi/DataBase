@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_SECURE_NO_WARNINGS
 #include<stdio.h>
 #include<conio.h>
 #include<stdlib.h>
@@ -16,17 +16,13 @@ typedef struct datatype //structure to store various datatypes
 
 }datatype;
 
-typedef struct values
-{
-	datatype d1;//structure consisting of all the datatypes
-}values;
 
 typedef struct table
 {
 	int rows, cols;
 	struct Fields* headers;
 	char * schema_name;
-	struct values*** new_table;
+	struct datatype*** cell;
 }table;
 
 typedef struct Query // storing the query in the form of a structure
@@ -223,11 +219,11 @@ void display(query*q, table*database, int row) // to print the result on to the 
 		if (q->display[i] == 1)
 		{
 			if (database[q->sh].headers[i].data_type == 1)
-				printf("%3d  ", database[q->sh].new_table[row][i]->d1.int_value);
+				printf("%3d  ", database[q->sh].cell[row][i]-> int_value);
 			if (database[q->sh].headers[i].data_type == 2)
-				printf("%10s ", database[q->sh].new_table[row][i]->d1.string);
+				printf("%10s ", database[q->sh].cell[row][i]-> string);
 			if (database[q->sh].headers[i].data_type == 3)
-				printf("%3f  ", database[q->sh].new_table[row][i]->d1.float_value);
+				printf("%3f  ", database[q->sh].cell[row][i]-> float_value);
 		}
 	}
 	printf("\n");
@@ -246,15 +242,15 @@ void implement(query* q, table*database)
 			{
 				if (database[q->sh].headers[q->source].data_type == 1)
 				{
-					operation(database[q->sh].new_table[i][q->source]->d1.int_value, q, database, i);
+					operation(database[q->sh].cell[i][q->source]-> int_value, q, database, i);
 				}
 				if (database[q->sh].headers[q->source].data_type == 2)
 				{
-					str_operation(database[q->sh].new_table[i][q->source]->d1.string, q, database, i);
+					str_operation(database[q->sh].cell[i][q->source]-> string, q, database, i);
 				}
 				if (database[q->sh].headers[q->source].data_type == 3)
 				{
-					operation(database[q->sh].new_table[i][q->source]->d1.float_value, q, database, i);
+					operation(database[q->sh].cell[i][q->source]-> float_value, q, database, i);
 				}
 			}
 
@@ -280,16 +276,16 @@ void flush(char*buffer, table*database,int *index)
 		{
 			if (database[k].headers[j].data_type == 1)
 			{
-				fprintf(fp1, "%d,", database[k].new_table[i][j]->d1.int_value);
+				fprintf(fp1, "%d,", database[k].cell[i][j]-> int_value);
 			}
 			if (database[k].headers[j].data_type == 2)
 			{
-				fprintf(fp1, "%s,", database[k].new_table[i][j]->d1.string);
+				fprintf(fp1, "%s,", database[k].cell[i][j]-> string);
 
 			}
 			if (database[k].headers[j].data_type == 3)
 			{
-				fprintf(fp1, "%f,", database[k].new_table[i][j]->d1.float_value);
+				fprintf(fp1, "%f,", database[k].cell[i][j]-> float_value);
 			}
 		}
 		fprintf(fp1, "\n");
@@ -362,7 +358,7 @@ void import(char* buffer1,table*database,int*index)
 	int l = 0;
 	while (fgets(buffer, 250, fp1))
 		l++;
-	values *** temp = (values***)malloc(l*sizeof(values**));
+	datatype *** temp = (datatype***)malloc(l*sizeof(datatype**));
 	rewind(fp1);
 	int i = 0;
 
@@ -370,26 +366,26 @@ void import(char* buffer1,table*database,int*index)
 		k++;
 	while (fgets(buffer, 250, fp1))
 	{
-		temp[i] = (values**)malloc(sizeof(values*));
+		temp[i] = (datatype**)malloc(sizeof(datatype*));
 		int j = 0;
 		token = strtok(buffer, ",");
 
 		while (token != NULL)
 		{
-			temp[i][j] = (values*)malloc(sizeof(values));
+			temp[i][j] = (datatype*)malloc(sizeof(datatype));
 			if (database[k].headers[j].data_type == 1)
 			{
-				temp[i][j]->d1.int_value = atoi(token);
+				temp[i][j]-> int_value = atoi(token);
 			}
 			if (database[k].headers[j].data_type == 2)
 			{
-				temp[i][j]->d1.string = (char*)malloc(10 * sizeof(char));
-				strcpy(temp[i][j]->d1.string, token);
+				temp[i][j]-> string = (char*)malloc(10 * sizeof(char));
+				strcpy(temp[i][j]-> string, token);
 
 			}
 			if (database[k].headers[j].data_type == 3)
 			{
-				temp[i][j]->d1.float_value = atoi(token);
+				temp[i][j]-> float_value = atoi(token);
 			}
 			j++;
 			token = strtok(NULL, ",");
@@ -398,34 +394,34 @@ void import(char* buffer1,table*database,int*index)
 	}
 	database[k].schema_name = (char*)malloc(10 * sizeof(char));
 	strcpy(database[k].schema_name, name);
-	database[k].new_table = temp;
+	database[k].cell = temp;
 	database[k].rows = l;
 }
 int check_primarykey(table* database,int index1,int index2,int row1,int row2)// to check whether the primary keys of one row of table1 and another rows of table2
 {
 	if (database[index1].headers[0].data_type==1)
 	{
-		if (database[index1].new_table[row1][0]->d1.int_value == database[index2].new_table[row2][0]->d1.int_value)
+		if (database[index1].cell[row1][0]-> int_value == database[index2].cell[row2][0]-> int_value)
 			return 1;
 		else
 			return 0;
 	}
 	if (database[index1].headers[0].data_type == 2)
 	{
-		if (strcmp(database[index1].new_table[row1][0]->d1.string, database[index2].new_table[row2][0]->d1.string) == 0)
+		if (strcmp(database[index1].cell[row1][0]-> string, database[index2].cell[row2][0]-> string) == 0)
 			return 1;
 		else
 			return 0;
 	}
 	if (database[index1].headers[0].data_type == 3)
 	{
-		if (database[index1].new_table[row1][0]->d1.float_value == database[index2].new_table[row2][0]->d1.float_value)
+		if (database[index1].cell[row1][0]-> float_value == database[index2].cell[row2][0]-> float_value)
 			return 1;
 		else
 			return 0;
 	}
 }
-void join(char* buffer,table*database,int*index,values*** temp1)
+void join(char* buffer,table*database,int*index,datatype*** temp1)
 {
 	char*token = (char*)malloc(10 * sizeof(char*));
 	token = strtok(buffer, " ");
@@ -461,11 +457,11 @@ void join(char* buffer,table*database,int*index,values*** temp1)
 	
 					for (k = 0; k < database[index1].cols; k++, l++)
 					{
-						temp1[i][l] = database[index1].new_table[i][k];
+						temp1[i][l] = database[index1].cell[i][k];
 					}
 					for (k = 1; k < database[index2].cols; k++, l++)
 					{
-						temp1[i][l] = database[index2].new_table[i][k];
+						temp1[i][l] = database[index2].cell[i][k];
 					}
 
 				}
@@ -473,7 +469,7 @@ void join(char* buffer,table*database,int*index,values*** temp1)
 		}
 
 	}
-	database[*index].new_table = temp1;
+	database[*index].cell = temp1;
 	database[*index].rows = m;
 	*index = *index + 1;
 }
@@ -498,9 +494,9 @@ void execute(char *cmd, table*database, int* index)
 	}
 	else if (strcmp(token, "join") == 0)
 	{
-		values*** temp1 = (values***)malloc(200*sizeof(values**));
+		datatype*** temp1 = (datatype***)malloc(200*sizeof(datatype**));
 		for (int i = 0; i < 200; i++)
-			temp1[i] = (values**)malloc(sizeof(values*));
+			temp1[i] = (datatype**)malloc(sizeof(datatype*));
 		join(cmd1,database,index,temp1);
 	}
 	else if (strcmp(token, "select") == 0)
@@ -509,6 +505,23 @@ void execute(char *cmd, table*database, int* index)
 		execute_query(cmd1, database, index, q1);
 		implement(q1, database);
 	}
+}
+int main()
+{
+	int index = 0;//index for pointing to a particular table
+	table*database = (table*)malloc(10 * sizeof(table*));// array of table where each table will store
+	char* cmd = (char*)malloc(100 * sizeof(char));
+	Fields** f = (Fields**)malloc(10 * sizeof(Fields*));;
+	while (1)
+	{
+		printf("SQL>>>");
+		fflush(stdin);
+		gets(cmd);
+		execute(cmd, database, &index);
+	}
+	system("pause");
+	return 0;
+}
 }
 int main()
 {
